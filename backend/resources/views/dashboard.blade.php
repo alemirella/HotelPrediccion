@@ -16,7 +16,7 @@
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="w-full bg-white text-[#7a86a1] px-4 py-2 rounded-lg hover:bg-gray-200 transition">
-                    🚪 Cerrar sesión
+                    Cerrar sesión
                 </button>
             </form>
         </div>
@@ -27,7 +27,7 @@
         <!-- Header -->
         <header class="w-full bg-white shadow p-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-[#7a86a1]">Predicción de Afluencia Turística</h1>
-            <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:underline">🔙 Volver al Login</a>
+            <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:underline">Volver al Login</a>
         </header>
 
         <!-- Contenido -->
@@ -65,7 +65,7 @@
                     </select>
                 </div>
                 <button class="bg-[#7a86a1] text-white px-4 py-2 rounded-lg hover:bg-[#5c677f] transition">
-                    🔍 Aplicar Filtros
+                    Aplicar Filtros
                 </button>
             </div>
 

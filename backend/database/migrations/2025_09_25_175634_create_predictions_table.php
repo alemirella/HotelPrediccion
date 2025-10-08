@@ -13,15 +13,20 @@ return new class extends Migration
     {
         Schema::create('predictions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('hotel_id')->nullable();
-            $table->date('date'); // fecha predicha
-            $table->integer('predicted_count'); // resultado del modelo
-            $table->string('model_version')->nullable(); // versión del modelo ML
-            $table->json('input_features')->nullable(); // características usadas
+
+            // Relación con el usuario (hotel)
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
+            // Datos de la predicción
+            $table->date('date');                     // Fecha predicha
+            $table->integer('predicted_count');       // Resultado del modelo
+            $table->string('model_version')->default('v1.0'); // Versión del modelo ML
+            $table->json('input_features')->nullable(); // Características usadas para predecir
+
             $table->timestamps();
         });
     }
-    
 
     /**
      * Reverse the migrations.

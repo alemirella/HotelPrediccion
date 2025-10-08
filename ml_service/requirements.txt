@@ -1,0 +1,9 @@
+pandas
+scikit-learn
+openpyxl
+flask
+requests
+joblib
+
+#ejecutar: (venv) PS D:\xampp\htdocs\projects2\ml_service> pip install -r requirements.txt
+#verificar: pip list
