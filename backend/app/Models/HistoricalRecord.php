@@ -12,13 +12,19 @@ class HistoricalRecord extends Model
     protected $fillable = [
         'user_id',
         'date',
-        'demand_count',
+        'clima',
+        'afluencia_turistica',
+        'num_reservas',
+        'porcentaje_ocupacion',
+        'dia_festivo',
         'meta',
     ];
 
     protected $casts = [
         'meta' => 'array',
         'date' => 'date',
+        'dia_festivo' => 'boolean',
+        'porcentaje_ocupacion' => 'float',
     ];
 
     /**

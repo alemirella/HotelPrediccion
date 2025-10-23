@@ -29,9 +29,10 @@ Route::middleware('guest')->group(function () {
 */
 Route::middleware('auth')->group(function () {
 
-    // Dashboard
+    // ✅ Dashboard con datos de predicciones
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        $predictions = \App\Http\Controllers\PredictionController::getDashboardData();
+        return view('dashboard', compact('predictions'));
     })->name('dashboard');
 
     // Cerrar sesión
@@ -56,8 +57,7 @@ Route::middleware('auth')->group(function () {
 
     // Exportar registros históricos a CSV
     Route::get('/predictions/export', [PredictionController::class, 'export'])
-    ->name('predictions.export');
-
+        ->name('predictions.export');
 });
 
 /*

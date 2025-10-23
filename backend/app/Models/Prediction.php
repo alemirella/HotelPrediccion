@@ -9,12 +9,17 @@ class Prediction extends Model
     protected $fillable = [
         'user_id',
         'date',
-        'predicted_count',
-        'model_version',
-        'input_features'
+        'afluencia_turistica',
+        'num_reservas',
+        'porcentaje_ocupacion',
+        'clima',
+        'dia_festivo',
+        'model_version'
     ];
+
     protected $casts = [
-        'input_features' => 'array',
         'date' => 'date',
+        'dia_festivo' => 'boolean',
+        'porcentaje_ocupacion' => 'float',
     ];
 }

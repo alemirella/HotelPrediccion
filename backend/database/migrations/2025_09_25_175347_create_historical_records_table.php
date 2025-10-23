@@ -11,15 +11,21 @@ return new class extends Migration
         Schema::create('historical_records', function (Blueprint $table) {
             $table->id();
 
-            // Relación con el hotel (usuario)
+            // Relación con el usuario (hotel)
             $table->foreignId('user_id')
                   ->constrained('users')
                   ->onDelete('cascade');
 
             // Datos históricos
             $table->date('date');
-            $table->integer('demand_count');   // número de turistas / ocupación
-            $table->json('meta')->nullable();  // info extra (eventos, clima, etc.)
+            $table->integer('clima')->nullable();                  // 1=Soleado, 2=Nublado, etc.
+            $table->integer('afluencia_turistica')->nullable();    // número de visitantes
+            $table->integer('num_reservas')->nullable();           // número de reservas
+            $table->decimal('porcentaje_ocupacion', 5, 2)->nullable(); // 0–100 %
+            $table->boolean('dia_festivo')->default(false);
+
+            // Información adicional opcional
+            $table->json('meta')->nullable();
 
             $table->timestamps();
         });

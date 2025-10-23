@@ -4,43 +4,26 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Prediction;
-use App\Models\HistoricalRecord;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Carbon;
 
 class PredictionController extends Controller
 {
     /**
-     * Mostrar tabla de predicciones
+     * Mostrar todas las predicciones del usuario autenticado.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $start = $request->get('start');
-        $end   = $request->get('end');
+        $predictions = Prediction::where('user_id', Auth::id())
+            ->orderBy('date', 'desc')
+            ->get();
 
-        $query = Prediction::where('user_id', Auth::id())
-            ->select(
-                DB::raw('DATE_FORMAT(date, "%Y-%m-%d") as fecha'),
-                DB::raw('predicted_count as afluencia'),
-                DB::raw('JSON_UNQUOTE(JSON_EXTRACT(input_features, "$.n_reservas")) as reservas'),
-                DB::raw('JSON_UNQUOTE(JSON_EXTRACT(input_features, "$.ocupacion")) as ocupacion')
-            )
-            ->orderBy('fecha', 'desc');
-
-        // ✅ Si viene rango de fechas (cuando se predice), filtramos
-        if ($start && $end) {
-            $query->whereBetween('date', [$start, $end]);
-        }
-
-        $predictions = $query->get();
-
-        return view('predictions.index', compact('predictions', 'start', 'end'));
+        return view('predictions.index', compact('predictions'));
     }
 
     /**
-     * Mostrar formulario para predecir
+     * Mostrar formulario para crear nueva predicción.
      */
     public function create()
     {
@@ -48,93 +31,103 @@ class PredictionController extends Controller
     }
 
     /**
-     * Guardar predicción y mostrarla en tabla
+     * Enviar fecha a Flask, recibir resultado y guardar predicción.
      */
     public function store(Request $request)
     {
         $request->validate([
             'date' => 'required|date',
-            'days' => 'required|in:7,15,30',
+            'days' => 'required|integer|min:1|max:365'
         ]);
 
-        $startDate = $request->date;
-        $endDate   = date('Y-m-d', strtotime($startDate . ' + ' . ($request->days - 1) . ' days'));
+        $flaskUrl = 'http://127.0.0.1:5000/predict';
 
         try {
-            $flaskUrl = 'http://127.0.0.1:5000/predict';
-
+            // Enviar solicitud POST a Flask
             $response = Http::post($flaskUrl, [
-                'fecha' => $startDate
+                'fecha' => $request->date,
+                'dias'  => $request->days
             ]);
 
+            // Validar respuesta
             if (!$response->successful()) {
                 return back()->withErrors([
-                    'api_error' => 'La API Flask no respondió correctamente (status ' . $response->status() . ')'
+                    'api_error' => 'Error al contactar con Flask (' . $response->status() . ')'
                 ]);
             }
 
-            $predictionData = $response->json();
+            $json = $response->json();
 
-            // ✅ Guardar predicción
-            Prediction::create([
-                'user_id'         => Auth::id(),
-                'date'            => $startDate,
-                'predicted_count' => $predictionData['prediccion']['Afluencia Turistica'],
-                'model_version'   => 'v1.0',
-                'input_features'  => [
-                    'days'       => $request->days,
-                    'end_date'   => $endDate,
-                    'n_reservas' => $predictionData['prediccion']['N# reservas'],
-                    'ocupacion'  => $predictionData['prediccion']['% ocupacion']
-                ]
-            ]);
+            // Flask devuelve: { "fecha":"YYYY-MM-DD", "prediccion": { ... } }
+            $predData = $json['prediccion'] ?? null;
 
-            // ✅ Redirigir a la tabla mostrando SOLO los datos de esa predicción
-            return redirect()->route('predictions.index', [
-                'start' => $startDate,
-                'end'   => $endDate
-            ])->with('success', '✅ Predicción generada correctamente.');
+            if (!$predData) {
+                // por seguridad, intenta usar todo el json como predicción
+                $predData = $json;
+            }
+
+            // Si la predicción es un array de predicciones (multi-día), normalizarlo
+            $predList = [];
+            if (is_array($predData) && array_keys($predData) === range(0, count($predData) - 1)) {
+                // es una lista indexada
+                $predList = $predData;
+            } else {
+                // único objeto
+                $predList[] = $predData;
+            }
+
+            foreach ($predList as $data) {
+                // Normalizar claves: aceptamos tanto snake_case como nombres variantes
+                $fecha = $data['fecha'] ?? $data['Fecha'] ?? $request->date;
+                $afluencia = $data['afluencia_turistica'] ?? $data['Afluencia Turistica'] ?? ($data['afluencia'] ?? 0);
+                $num_reservas = $data['num_reservas'] ?? $data['Num Reservas'] ?? $data['N# reservas'] ?? 0;
+                $porcentaje = $data['porcentaje_ocupacion'] ?? $data['% ocupacion'] ?? $data['Porcentaje Ocupacion'] ?? 0;
+                $clima = $data['clima'] ?? $data['Clima'] ?? null;
+                $dia_festivo = $data['dia_festivo'] ?? $data['Dia Festivo'] ?? false;
+
+                // Asegurar formato de fecha
+                try {
+                    $dateParsed = Carbon::parse($fecha)->format('Y-m-d');
+                } catch (\Exception $e) {
+                    $dateParsed = Carbon::parse($request->date)->format('Y-m-d');
+                }
+
+                Prediction::create([
+                    'user_id'              => Auth::id(),
+                    'date'                 => $dateParsed,
+                    'afluencia_turistica'  => (int) round($afluencia),
+                    'num_reservas'         => (int) round($num_reservas),
+                    'porcentaje_ocupacion' => (float) $porcentaje,
+                    'clima'                => is_null($clima) ? null : (int) round($clima),
+                    'dia_festivo'          => (bool) $dia_festivo,
+                    'model_version'        => 'v1.0'
+                ]);
+            }
+
+            return redirect()->route('predictions.index')
+                ->with('success', '✅ Predicción generada y guardada correctamente.');
 
         } catch (\Exception $e) {
             return back()->withErrors([
-                'api_error' => '❌ Error al conectar con el servicio Flask: ' . $e->getMessage()
+                'api_error' => '❌ Error al conectar con Flask: ' . $e->getMessage()
             ]);
         }
     }
 
     /**
-     * Exportar datos históricos a CSV
+     * Retornar datos listos para graficar.
      */
-    public function export()
+    public static function getDashboardData()
     {
-        $fileName = "historical_records.csv";
-
-        $records = HistoricalRecord::where('user_id', Auth::id())->get();
-
-        $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename=$fileName",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
-        ];
-
-        $columns = ['date', 'demand_count', 'meta'];
-
-        $callback = function () use ($records, $columns) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
-
-            foreach ($records as $record) {
-                fputcsv($file, [
-                    $record->date,
-                    $record->demand_count,
-                    json_encode($record->meta)
-                ]);
-            }
-            fclose($file);
-        };
-
-        return new StreamedResponse($callback, 200, $headers);
+        return Prediction::where('user_id', Auth::id())
+            ->orderBy('date', 'asc')
+            ->get([
+                'date',
+                'afluencia_turistica',
+                'num_reservas',
+                'porcentaje_ocupacion',
+                'clima',
+                'dia_festivo'
+            ]);
     }
 }
