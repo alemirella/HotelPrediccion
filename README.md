@@ -1,30 +1,81 @@
-## 📊 Resultados del Modelo Predictivo
+# 📊 Proyecto de Predicción de Reservas Hoteleras
 
-El modelo fue desarrollado en Python y entrenado con datos históricos de reservas de hotel.  
-A través del Colab [aquí](https://colab.research.google.com/drive/1g8Re4mvgIW-dsGKAggXP--zNQgNM19OU?usp=sharing), se implementó la lógica de predicción y se integró con la aplicación mediante una API REST.
+## 🧩 Descripción General
+Este proyecto tiene como objetivo desarrollar un **modelo predictivo de cancelación de reservas hoteleras**, integrando **Python** (para el entrenamiento del modelo) con una **aplicación web** mediante una **API REST**.  
+El sistema permite predecir si una reserva será **confirmada o cancelada**, ayudando a optimizar la gestión de clientes y recursos del hotel.
 
-### 🔹 Integración
-- La API recibe los datos del formulario web y los envía al modelo en Python.
-- El modelo devuelve la predicción al backend, donde se muestra al usuario.
+---
 
-### 🔹 Resultados de Precisión
-- Accuracy: **0.89**
-- Precision: **0.88**
-- Recall: **0.87**
-- F1-Score: **0.87**
-- Se validó con un conjunto de datos no visto para evitar sobreajuste.
+## 🧱 Arquitectura del Proyecto
+El proyecto está estructurado bajo el patrón **Modelo–Vista–Controlador (MVC)**, complementado con un módulo de **Machine Learning** en Python.
 
-### 🔹 Conclusión
-El modelo ofrece un desempeño sólido y consistente, adecuado para el prototipo actual.  
-Se recomienda ampliar el conjunto de datos para futuras versiones (PMV3) y recalibrar parámetros para mejorar la precisión.
+### 📂 Estructura de Carpetas
+- **/models** → Contiene los modelos de datos y conexiones con la base de datos.  
+- **/views** → Archivos y plantillas del frontend.  
+- **/controllers** → Controladores para la lógica de negocio y comunicación entre vistas y modelos.  
+- **/database** → Archivos SQL y procedimientos almacenados.  
+- **/ml_service** → Contiene los scripts Python para predicción y entrenamiento del modelo.  
 
-## Documentación del Modelo
-El modelo entrenado predice la probabilidad de que una reserva se confirme o se cancele, utilizando variables como fechas, tipo de cliente y duración de la estancia.
+---
 
-- **Algoritmo utilizado:** Random Forest / Regresión Logística (especificar cuál usaste)
-- **Entrenamiento:** conjunto de 80% de los datos.
-- **Validación:** 20% restante.
-- **Precisión total:** 0.89 (ver tabla de métricas arriba).
+## 🤖 Modelo Predictivo en Python
+El modelo fue desarrollado y ejecutado en **Google Colab**, utilizando un conjunto de datos históricos de reservas.
 
-La integración con la aplicación se realiza mediante una API REST que permite enviar los datos desde el sistema web al modelo, recibiendo la predicción en formato JSON.
+- **Algoritmo utilizado:** Random Forest / Regresión Logística (ajustar según tu caso)  
+- **Entrenamiento:** 80% de los datos  
+- **Validación:** 20% restante  
+- **Precisión total:** 0.89  
 
+El modelo se comunica con la aplicación web mediante una **API REST**, que recibe los datos del formulario y devuelve la predicción al backend.
+
+---
+
+## 🔗 Integración con la Aplicación
+1. El **usuario** completa el formulario de predicción desde la aplicación web.  
+2. El **backend** envía los datos mediante una solicitud **POST** a la API Python.  
+3. El **modelo** procesa los datos y devuelve una predicción en formato **JSON**.  
+4. El **resultado** se muestra en pantalla al usuario.
+
+---
+
+## 📈 Resultados del Modelo
+| Métrica       | Valor |
+|----------------|-------|
+| Accuracy       | 0.89  |
+| Precision      | 0.88  |
+| Recall         | 0.87  |
+| F1-Score       | 0.87  |
+
+El modelo fue validado con datos no vistos para evitar **overfitting** y garantizar un rendimiento generalizable.
+
+---
+
+## 📑 Documentación del Modelo
+El modelo predice la **probabilidad de cancelación o confirmación de reservas** en base a variables como:
+- Fecha de llegada y salida  
+- Tipo de cliente  
+- Duración de la estancia  
+- Tipo de habitación  
+- Historial de cancelaciones  
+
+### 📘 Recomendaciones para futuras versiones (PMV3)
+- Aumentar el tamaño del dataset  
+- Ajustar hiperparámetros del modelo  
+- Probar técnicas de balanceo de clases  
+
+---
+
+## ⚙️ Tecnologías Utilizadas
+- **Python (Colab, joblib, scikit-learn, pandas, numpy)**  
+- **Laravel / PHP (Backend Web)**  
+- **HTML / TailwindCSS (Frontend)**  
+- **MySQL (Base de Datos)**  
+- **API REST (Integración con Python)**  
+
+---
+
+## 🧠 Conclusión
+El sistema combina **inteligencia artificial y desarrollo web**, logrando una integración efectiva entre el modelo de predicción y la plataforma hotelera.  
+El desempeño del modelo es sólido (89% de precisión) y demuestra potencial para su aplicación en entornos reales.
+
+---
