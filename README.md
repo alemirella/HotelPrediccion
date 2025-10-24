@@ -17,3 +17,14 @@ A través del Colab [aquí](https://colab.research.google.com/drive/1g8Re4mvgIW-
 ### 🔹 Conclusión
 El modelo ofrece un desempeño sólido y consistente, adecuado para el prototipo actual.  
 Se recomienda ampliar el conjunto de datos para futuras versiones (PMV3) y recalibrar parámetros para mejorar la precisión.
+
+## Documentación del Modelo
+El modelo entrenado predice la probabilidad de que una reserva se confirme o se cancele, utilizando variables como fechas, tipo de cliente y duración de la estancia.
+
+- **Algoritmo utilizado:** Random Forest / Regresión Logística (especificar cuál usaste)
+- **Entrenamiento:** conjunto de 80% de los datos.
+- **Validación:** 20% restante.
+- **Precisión total:** 0.89 (ver tabla de métricas arriba).
+
+La integración con la aplicación se realiza mediante una API REST que permite enviar los datos desde el sistema web al modelo, recibiendo la predicción en formato JSON.
+
