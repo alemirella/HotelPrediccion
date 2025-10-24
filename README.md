@@ -2,7 +2,7 @@
 
 ## 🧩 Descripción General
 Este proyecto tiene como objetivo desarrollar un **modelo predictivo de cancelación de reservas hoteleras**, integrando **Python** (para el entrenamiento del modelo) con una **aplicación web** mediante una **API REST**.  
-El sistema permite predecir si una reserva será **confirmada o cancelada**, ayudando a optimizar la gestión de clientes y recursos del hotel.
+El sistema permite predecir diferentes factores en este ámbito, ayudando a optimizar la gestión de clientes y recursos del hotel.
 
 ---
 
@@ -51,7 +51,7 @@ El modelo fue validado con datos no vistos para evitar **overfitting** y garanti
 ---
 
 ## 📑 Documentación del Modelo
-El modelo predice la **probabilidad de cancelación o confirmación de reservas** en base a variables como:
+El modelo predice diferentes factores como:
 - Fecha de llegada y salida  
 - Tipo de cliente  
 - Duración de la estancia  
@@ -75,7 +75,7 @@ El modelo predice la **probabilidad de cancelación o confirmación de reservas*
 ---
 
 ## 🧠 Conclusión
-El sistema combina **inteligencia artificial y desarrollo web**, logrando una integración efectiva entre el modelo de predicción y la plataforma hotelera.  
+El sistema combina **machine learning y desarrollo web**, logrando una integración efectiva entre el modelo de predicción y la plataforma hotelera.  
 El desempeño del modelo es sólido (89% de precisión) y demuestra potencial para su aplicación en entornos reales.
 
 ---
