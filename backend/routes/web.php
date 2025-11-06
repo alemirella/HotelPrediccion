@@ -61,6 +61,10 @@ Route::middleware('auth')->group(function () {
         ->name('predictions.export');
 });
 
+
+Route::get('/predictions/export/pdf', [App\Http\Controllers\PredictionController::class, 'exportPDF'])->name('predictions.exportPDF');
+Route::get('/predictions/export/excel', [App\Http\Controllers\PredictionController::class, 'exportExcel'])->name('predictions.exportExcel');
+
 /*
 |--------------------------------------------------------------------------
 | Página principal

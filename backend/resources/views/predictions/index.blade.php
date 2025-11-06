@@ -20,12 +20,14 @@
                 <a href="{{ route('predictions.create') }}" class="ml-2 bg-[#5c677f] hover:bg-[#3e4659] text-white px-4 py-2 rounded-lg font-medium transition">
                     ➕ Nueva Predicción
                 </a>
-                <a href="{{ route('predictions.create') }}" class="ml-2 bg-[#5c677f] hover:bg-[#3e4659] text-white px-4 py-2 rounded-lg font-medium transition">
-                    Descargar en PDF
-                </a>
-                <a href="{{ route('predictions.create') }}" class="ml-2 bg-[#5c677f] hover:bg-[#3e4659] text-white px-4 py-2 rounded-lg font-medium transition">
-                    Descargar en Excel
-                </a>
+                <a href="{{ route('predictions.exportPDF') }}" class="ml-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition">
+    📄 Descargar en PDF
+</a>
+
+<a href="{{ route('predictions.exportExcel') }}" class="ml-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition">
+    📊 Descargar en Excel
+</a>
+
             </div>
 
             {{-- Mensajes --}}

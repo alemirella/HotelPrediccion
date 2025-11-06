@@ -1,14 +1,19 @@
 <?php
 
-namespace App\Exports;
+namespace App\Http\Controllers;
 
-use App\Models\Prediction;
-use Maatwebsite\Excel\Concerns\FromCollection;
+use App\Models\User;
+use Spatie\SimpleExcel\SimpleExcelWriter;
 
-class PredictionsExport implements FromCollection
+class ExportController extends Controller
 {
-    public function collection()
+    public function exportUsuarios()
     {
-        return Prediction::all();
+        $filePath = storage_path('app/usuarios.xlsx');
+
+        SimpleExcelWriter::create($filePath)
+            ->addRows(User::select('id', 'name', 'email', 'created_at')->get()->toArray());
+
+        return response()->download($filePath);
     }
 }

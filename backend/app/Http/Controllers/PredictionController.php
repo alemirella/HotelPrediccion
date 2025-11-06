@@ -7,6 +7,11 @@ use App\Models\Prediction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
+use App\Exports\PredictionsExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\laravwe;
+use Spatie\SimpleExcel\SimpleExcelWriter;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PredictionController extends Controller
 {
@@ -130,4 +135,28 @@ class PredictionController extends Controller
                 'dia_festivo'
             ]);
     }
+    public function exportExcel()
+{
+    $filePath = storage_path('app/predictions.xlsx');
+
+    SimpleExcelWriter::create($filePath)
+        ->addRows(
+            Prediction::all([
+                'date',
+                'clima',
+                'afluencia_turistica',
+                'num_reservas',
+                'porcentaje_ocupacion',
+                'dia_festivo'
+            ])->toArray()
+        );
+
+    return response()->download($filePath);
+}
+public function exportPDF()
+{
+    $predictions = Prediction::all();
+    $pdf = Pdf::loadView('pdf.predictions', compact('predictions'))->setPaper('a4', 'landscape');
+    return $pdf->download('predicciones.pdf');
+}
 }
