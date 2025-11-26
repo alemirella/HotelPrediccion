@@ -112,22 +112,22 @@
                 @if(count($predictions) > 0)
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
                         <div class="bg-white shadow rounded-xl p-6">
-                            <h3 class="text-lg font-semibold text-gray-700 mb-4">📅 Evolución de la Afluencia Turística</h3>
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Evolución de la Afluencia Turística</h3>
                             <canvas id="trendChart"></canvas>
                         </div>
 
                         <div class="bg-white shadow rounded-xl p-6">
-                            <h3 class="text-lg font-semibold text-gray-700 mb-4">🌦️ Afluencia Promedio según Clima</h3>
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Afluencia Promedio según Clima</h3>
                             <canvas id="weatherChart"></canvas>
                         </div>
 
                         <div class="bg-white shadow rounded-xl p-6">
-                            <h3 class="text-lg font-semibold text-gray-700 mb-4">🎉 Impacto de los Días Festivos</h3>
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Impacto de los Días Festivos</h3>
                             <canvas id="holidayChart"></canvas>
                         </div>
 
                         <div class="bg-white shadow rounded-xl p-6">
-                            <h3 class="text-lg font-semibold text-gray-700 mb-4">📊 Relación entre Reservas y Ocupación</h3>
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Relación entre Reservas y Ocupación</h3>
                             <canvas id="correlationChart"></canvas>
                         </div>
                     </div>
@@ -139,8 +139,30 @@
             <!-- PMV3 -->
             <div id="pmv3">
                 <h2 class="text-2xl font-bold text-[#7a86a1] mb-6">PMV3: Factores Externos</h2>
-                <p class="text-gray-500">⚠️ Módulo pendiente de implementación.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white shadow-lg rounded-xl p-6 flex flex-col justify-between hover:shadow-xl transition border-t-4 border-[#e57373]">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Módulo de análisis externo</h3>
+                        <p class="text-sm text-gray-600 mb-4">Revisa la influencia del clima, temporadas y eventos.</p>
+                        <a href="{{ route('external_factors.index') }}" class="bg-[#e57373] text-white px-4 py-2 rounded-lg text-center hover:bg-[#ef5350] transition">Ver Factores Externos</a>
+                    </div>
+                    <div class="bg-white shadow-lg rounded-xl p-6 flex flex-col justify-between hover:shadow-xl transition border-t-4 border-[#7a86a1]">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Precios dinámicos</h3>
+                        <p class="text-sm text-gray-600 mb-4">Recomendaciones automáticas de precios dinámicos.</p>
+                        <a href="{{ route('prices.index') }}" class="bg-[#7a86a1] text-white px-4 py-2 rounded-lg text-center hover:bg-[#5c677f] transition">Ver Precios</a>
+                    </div>
+                    <div class="bg-white shadow-lg rounded-xl p-6 flex flex-col justify-between hover:shadow-xl transition border-t-4 border-[#c9c5c4]">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Panel de insights</h3>
+                        <p class="text-sm text-gray-600 mb-4">Panel de insights estratégicos para la gerencia.</p>
+                        <a href="{{ route('insights.index') }}" class="bg-[#c9c5c4] text-white px-4 py-2 rounded-lg text-center hover:bg-[#a6a1a0] transition">Ver Panel</a>
+                    </div>
+                </div>
+
+                <!--   AQUI VA PRECIOS -->
+
             </div>
+            <!-- fin PMV3 -->
+
         </section>
     </main>
 </div>

@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class HistoricalRecord extends Model
 {
-    use HasFactory;
+    protected $table = 'historical_records';
 
     protected $fillable = [
         'user_id',
@@ -17,21 +17,33 @@ class HistoricalRecord extends Model
         'num_reservas',
         'porcentaje_ocupacion',
         'dia_festivo',
-        'meta',
+        'meta'
     ];
 
     protected $casts = [
-        'meta' => 'array',
         'date' => 'date',
+        'meta' => 'array',
         'dia_festivo' => 'boolean',
-        'porcentaje_ocupacion' => 'float',
     ];
 
     /**
-     * Relación con el usuario (hotel).
+     * Insertar usando Stored Procedure
+     * (Como pide tu profesor: desde el MODELO)
      */
-    public function user()
+    public static function insertUsingSP($data)
     {
-        return $this->belongsTo(\App\Models\User::class);
+        return DB::statement(
+            "CALL sp_insert_historical_record(?, ?, ?, ?, ?, ?, ?, ?)",
+            [
+                $data['user_id'],
+                $data['date'],
+                $data['clima'],
+                $data['afluencia_turistica'],
+                $data['num_reservas'],
+                $data['porcentaje_ocupacion'],
+                $data['dia_festivo'],
+                isset($data['meta']) ? json_encode($data['meta']) : null
+            ]
+        );
     }
 }

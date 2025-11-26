@@ -6,18 +6,12 @@ use Illuminate\Http\Request;
 use App\Models\Prediction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Carbon;
-use App\Exports\PredictionsExport;
-use Maatwebsite\Excel\Facades\Excel;
-use Barryvdh\laravwe;
+use Carbon\Carbon; 
 use Spatie\SimpleExcel\SimpleExcelWriter;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class PredictionController extends Controller
 {
-    /**
-     * Mostrar todas las predicciones del usuario autenticado.
-     */
     public function index()
     {
         $predictions = Prediction::where('user_id', Auth::id())
@@ -27,17 +21,11 @@ class PredictionController extends Controller
         return view('predictions.index', compact('predictions'));
     }
 
-    /**
-     * Mostrar formulario para crear nueva predicción.
-     */
     public function create()
     {
         return view('predictions.create');
     }
 
-    /**
-     * Enviar fecha a Flask, recibir resultado y guardar predicción.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -48,13 +36,11 @@ class PredictionController extends Controller
         $flaskUrl = 'http://127.0.0.1:5000/predict';
 
         try {
-            // Enviar solicitud POST a Flask
             $response = Http::post($flaskUrl, [
                 'fecha' => $request->date,
                 'dias'  => $request->days
             ]);
 
-            // Validar respuesta
             if (!$response->successful()) {
                 return back()->withErrors([
                     'api_error' => 'Error al contactar con Flask (' . $response->status() . ')'
@@ -62,35 +48,23 @@ class PredictionController extends Controller
             }
 
             $json = $response->json();
+            $predData = $json['prediccion'] ?? $json;
 
-            // Flask devuelve: { "fecha":"YYYY-MM-DD", "prediccion": { ... } }
-            $predData = $json['prediccion'] ?? null;
-
-            if (!$predData) {
-                // por seguridad, intenta usar todo el json como predicción
-                $predData = $json;
-            }
-
-            // Si la predicción es un array de predicciones (multi-día), normalizarlo
             $predList = [];
             if (is_array($predData) && array_keys($predData) === range(0, count($predData) - 1)) {
-                // es una lista indexada
                 $predList = $predData;
             } else {
-                // único objeto
                 $predList[] = $predData;
             }
 
             foreach ($predList as $data) {
-                // Normalizar claves: aceptamos tanto snake_case como nombres variantes
-                $fecha = $data['fecha'] ?? $data['Fecha'] ?? $request->date;
-                $afluencia = $data['afluencia_turistica'] ?? $data['Afluencia Turistica'] ?? ($data['afluencia'] ?? 0);
-                $num_reservas = $data['num_reservas'] ?? $data['Num Reservas'] ?? $data['N# reservas'] ?? 0;
-                $porcentaje = $data['porcentaje_ocupacion'] ?? $data['% ocupacion'] ?? $data['Porcentaje Ocupacion'] ?? 0;
-                $clima = $data['clima'] ?? $data['Clima'] ?? null;
-                $dia_festivo = $data['dia_festivo'] ?? $data['Dia Festivo'] ?? false;
+                $fecha = $data['fecha'] ?? $request->date;
+                $num_reservas = $data['num_reservas'] ?? 0;
+                $porcentaje = $data['porcentaje_ocupacion'] ?? 0;
+                $clima = $data['clima'] ?? null;
+                $dia_festivo = $data['dia_festivo'] ?? false;
+                $afluencia = $data['afluencia_turistica'] ?? 0;
 
-                // Asegurar formato de fecha
                 try {
                     $dateParsed = Carbon::parse($fecha)->format('Y-m-d');
                 } catch (\Exception $e) {
@@ -119,9 +93,6 @@ class PredictionController extends Controller
         }
     }
 
-    /**
-     * Retornar datos listos para graficar.
-     */
     public static function getDashboardData()
     {
         return Prediction::where('user_id', Auth::id())
@@ -135,28 +106,139 @@ class PredictionController extends Controller
                 'dia_festivo'
             ]);
     }
+
+    // EXTERNAL FACTORS
+    // Mostrar vista inicial con predicciones existentes
+    public function showExternalFactors()
+    {
+        // Traemos todas las predicciones del usuario
+        $predictions = Prediction::where('user_id', Auth::id())->get();
+
+        return view('external_factors.index', compact('predictions'));
+    }
+
+    public function analyzeExternalFactors(Request $request)
+    {
+        $request->validate([
+            'clima' => 'required|string',
+            'dia_festivo' => 'required|boolean'
+        ]);
+
+        $predictions = Prediction::where('user_id', Auth::id())->get();
+
+        if ($predictions->isEmpty()) {
+            return back()->withErrors(['api_error' => 'No hay predicciones disponibles.']);
+        }
+
+        // Mapeo de clima
+        $climaMap = ['soleado'=>1,'caluroso'=>2,'nublado'=>3,'lluvioso'=>4];
+        $climaValue = $climaMap[strtolower($request->clima)] ?? null;
+
+        $diaFestivo = $request->dia_festivo ? 1 : 0;
+
+        // Filtramos predicciones
+        $filtered = $predictions->filter(function($p) use ($climaValue, $diaFestivo) {
+            $climaMatch = is_null($climaValue) ? true : (int)$p->clima === (int)$climaValue;
+            $festivoMatch = (int)$p->dia_festivo === (int)$diaFestivo;
+            return $climaMatch && $festivoMatch;
+        });
+
+        // Si no hay predicciones filtradas, usamos todas para evitar ceros
+        if ($filtered->isEmpty()) {
+            $filtered = $predictions;
+        }
+
+        $analysisResult = [
+            'afluencia_turistica' => round($filtered->avg('afluencia_turistica') ?? 0,2),
+            'num_reservas' => round($filtered->avg('num_reservas') ?? 0,2),
+            'porcentaje_ocupacion' => round($filtered->avg('porcentaje_ocupacion') ?? 0,2)
+        ];
+
+        return view('external_factors.index', [
+            'predictions' => $predictions,
+            'analysisResult' => $analysisResult,
+            'filters' => [
+                'clima' => $request->clima,
+                'dia_festivo' => $request->dia_festivo
+            ]
+        ]);
+    }
+
+
+    // PRECIOS
+    // PRECIOS
+    public function showPrices()
+    {
+        // Podrías pasar predicciones existentes si quieres mostrar histórico
+        return view('prices.index');
+    }
+
+    public function getRecommendedPrice(Request $request)
+    {
+        $request->validate([
+            'precio_actual' => 'required|numeric',
+            'ocupacion_hotel' => 'required|numeric',
+            'ocupacion_zona' => 'required|numeric',
+            'anticipacion_reserva' => 'required|numeric',
+            'dia_semana' => 'required|string',
+            'mes' => 'required|string',
+            'tipo_habitacion' => 'required|string',
+            'competencia_precio_promedio' => 'required|numeric',
+            'evento_ciudad' => 'required|boolean',
+            'clima' => 'required|string',
+            'demanda_historica' => 'required|numeric',
+            'feriado' => 'required|boolean',
+        ]);
+
+        $flaskUrl = "http://127.0.0.1:5001/predict-price";
+
+        try {
+            $response = Http::post($flaskUrl, $request->all());
+
+            if (!$response->successful()) {
+                return back()->withErrors(['api_error' => 'Error al contactar ML service']);
+            }
+
+            $precio = $response->json()['precio_recomendado'] ?? null;
+
+            return view('prices.index', ['precio_recomendado' => $precio]);
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['api_error' => 'Error al conectar con ML service: ' . $e->getMessage()]);
+        }
+    }
+
+
+    // INSIGHTS
+    public function showInsights()
+    {
+        $predictions = self::getDashboardData();
+        return view('insights.index', compact('predictions'));
+    }
+
     public function exportExcel()
-{
-    $filePath = storage_path('app/predictions.xlsx');
+    {
+        $filePath = storage_path('app/predictions.xlsx');
 
-    SimpleExcelWriter::create($filePath)
-        ->addRows(
-            Prediction::all([
-                'date',
-                'clima',
-                'afluencia_turistica',
-                'num_reservas',
-                'porcentaje_ocupacion',
-                'dia_festivo'
-            ])->toArray()
-        );
+        SimpleExcelWriter::create($filePath)
+            ->addRows(
+                Prediction::where('user_id', Auth::id())->get([
+                    'date',
+                    'clima',
+                    'afluencia_turistica',
+                    'num_reservas',
+                    'porcentaje_ocupacion',
+                    'dia_festivo'
+                ])->toArray()
+            );
 
-    return response()->download($filePath);
-}
-public function exportPDF()
-{
-    $predictions = Prediction::all();
-    $pdf = Pdf::loadView('pdf.predictions', compact('predictions'))->setPaper('a4', 'landscape');
-    return $pdf->download('predicciones.pdf');
-}
+        return response()->download($filePath);
+    }
+
+    public function exportPDF()
+    {
+        $predictions = Prediction::where('user_id', Auth::id())->get();
+        $pdf = Pdf::loadView('pdf.predictions', compact('predictions'))->setPaper('a4', 'landscape');
+        return $pdf->download('predicciones.pdf');
+    }
 }

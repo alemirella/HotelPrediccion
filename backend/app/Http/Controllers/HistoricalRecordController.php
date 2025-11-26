@@ -20,6 +20,7 @@ class HistoricalRecordController extends Controller
 
     /**
      * Guardar un registro histórico ingresado manualmente.
+     * AHORA usando Stored Procedure desde el Modelo (MVC correcto)
      */
     public function store(Request $request)
     {
@@ -33,12 +34,14 @@ class HistoricalRecordController extends Controller
             'meta' => 'nullable|string',
         ]);
 
+        // Procesar campo meta
         $metaInput = $request->input('meta');
         $meta = $metaInput
             ? (json_decode($metaInput, true) ?? ['notes' => $metaInput])
             : null;
 
-        HistoricalRecord::create([
+        // LLAMADA AL STORED PROCEDURE DESDE EL MODELO
+        HistoricalRecord::insertUsingSP([
             'user_id'              => Auth::id(),
             'date'                 => $request->date,
             'clima'                => (int)$request->clima,
@@ -49,11 +52,13 @@ class HistoricalRecordController extends Controller
             'meta'                 => $meta,
         ]);
 
-        return redirect()->route('dashboard')->with('success', '✅ Registro guardado correctamente.');
+        return redirect()->route('dashboard')
+            ->with('success', '✅ Registro guardado correctamente mediante Stored Procedure.');
     }
 
     /**
      * Importar registros históricos desde un archivo Excel o CSV.
+     * CADA registro se insertará usando el Stored Procedure.
      */
     public function importExcel(Request $request)
     {
@@ -78,12 +83,11 @@ class HistoricalRecordController extends Controller
             $ocupacion = $row['F'] ?? null; // % Ocupación
             $festivo   = $row['G'] ?? 0;    // Día festivo
 
-            // --- Conversión de fecha ---
+            // Conversión de fecha
             $date = null;
             if ($rawDate) {
                 $rawDate = trim($rawDate);
 
-                // Si Excel la guarda como número
                 if (is_numeric($rawDate)) {
                     try {
                         $date = ExcelDate::excelToDateTimeObject($rawDate)->format('Y-m-d');
@@ -91,7 +95,6 @@ class HistoricalRecordController extends Controller
                         $date = null;
                     }
                 } else {
-                    // Si está en formato texto (01/01/2025 o 01-01-2025)
                     $formats = ['d/m/Y', 'd-m-Y', 'Y-m-d'];
                     foreach ($formats as $format) {
                         $dateObj = \DateTime::createFromFormat($format, $rawDate);
@@ -103,9 +106,11 @@ class HistoricalRecordController extends Controller
                 }
             }
 
-            // Guardar solo si tiene fecha y datos válidos
+            // Validar datos
             if ($date && $clima !== null && $afluencia !== null && $reservas !== null) {
-                HistoricalRecord::create([
+
+                // INSERTAR usando SP
+                HistoricalRecord::insertUsingSP([
                     'user_id'              => Auth::id(),
                     'date'                 => $date,
                     'clima'                => (int)$clima,
@@ -113,12 +118,14 @@ class HistoricalRecordController extends Controller
                     'num_reservas'         => (int)$reservas,
                     'porcentaje_ocupacion' => (float)$ocupacion,
                     'dia_festivo'          => (bool)$festivo,
+                    'meta'                 => null,
                 ]);
+
                 $imported++;
             }
         }
 
         return redirect()->route('dashboard')
-            ->with('success', "✅ Se importaron {$imported} registros correctamente.");
+            ->with('success', "✅ Se importaron {$imported} registros mediante Stored Procedure.");
     }
 }
