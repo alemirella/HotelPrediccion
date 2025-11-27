@@ -26,10 +26,6 @@ class HistoricalRecord extends Model
         'dia_festivo' => 'boolean',
     ];
 
-    /**
-     * Insertar usando Stored Procedure
-     * (Como pide tu profesor: desde el MODELO)
-     */
     public static function insertUsingSP($data)
     {
         return DB::statement(
